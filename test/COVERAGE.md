@@ -36,13 +36,13 @@ are not.
 
 | Job (status context) | Path | Tests |
 |---|---|---:|
-| `unit (cli)` | `test/unit/cli/` + `cli/tests/` | 1373 (+2 xfailed) |
-| `unit (box)` | `test/unit/box/` | 1704 |
+| `unit (cli)` | `test/unit/cli/` + `cli/tests/` | 1381 (+2 xfailed) |
+| `unit (box)` | `test/unit/box/` | 1717 |
 | `unit (measurement)` | `test/unit/measurement/` | 105 |
 | `unit (blufi)` | `test/unit/blufi/` | 89 |
 | `unit (mcp)` | `test/mcp/unit/` | 168 |
 | `unit (root)` | `test/unit/test_*.py`, `test/test_*.py` | 127 (+1 skipped) |
-| | **Total gated** | **3566** |
+| | **Total gated** | **3587** |
 
 Each suite gets its own job because they need incompatible `sys.modules` states for the name
 `lager`: `test/unit/measurement/conftest.py` registers a placeholder whose `__init__` never runs
@@ -443,9 +443,9 @@ cli/tests/                #  7 files: 6 pytest suites (GATED via `unit (cli)`),
                           #           plus 1 standalone report script
 ```
 
-### Local Unit Tests (`test/unit/` -- 148 files)
+### Local Unit Tests (`test/unit/` -- 150 files)
 
-#### Box Unit Tests (`test/unit/box/` -- 79 files)
+#### Box Unit Tests (`test/unit/box/` -- 80 files)
 
 `conftest.py` in this directory imports the real `lager` package once, before any test module is
 imported, and stubs the two third-party modules that are neither guarded nor installed
@@ -508,6 +508,7 @@ imported, and stubs the two third-party modules that are neither guarded nor ins
 | `test_openocd_dispatch.py` | OpenOCD interface .cfg dispatch and user-cfg override behavior |
 | `test_probes_visa_parsing.py` | VISA address parsing for empty-serial FTDI probes |
 | `test_python_kill.py` | `/python/kill` signals every PID in a job, once per process group, and shares one grace window across the whole set; real forked children, not mocks |
+| `test_python_timeout.py` | `--timeout` builds an enforceable deadline: `/usr/bin/timeout --kill-after`, the ceiling applied out loud, no wrapper when detached; real SIGTERM-ignoring children prove the old argv could not stop them and the new one can; plus a guard that the box ceiling fits inside the CLI's HTTP read timeout |
 | `test_python_service_breakpoint.py` | Breakpoint endpoints on box python/service.py POST routes |
 | `test_python_service_multipart.py` | `parse_multipart` after the move off `cgi.FieldStorage`: byte-exact binary fields, repeated names, and the `.py`/`.zip` to BytesIO rule |
 | `test_python_service_nets_list.py` | GET /nets/list handler returning saved net array or empty on missing/invalid JSON |
@@ -533,7 +534,7 @@ imported, and stubs the two third-party modules that are neither guarded nor ins
 | `test_ykush_driver.py` | YKUSH USB hub driver: device-contention regression from an indefinitely cached handle |
 | `test_automation_exports.py` | Static parse of `automation/__init__.py`'s lazy export table: no name guarded twice, every returned driver reachable under its own name, everything in `__all__` resolvable -- the copy-paste class of defect that made one driver answer to another's name |
 
-#### CLI Unit Tests (`test/unit/cli/` -- 56 files)
+#### CLI Unit Tests (`test/unit/cli/` -- 57 files)
 
 | File | What it tests |
 |------|---------------|
@@ -572,6 +573,7 @@ imported, and stubs the two third-party modules that are neither guarded nor ins
 | `test_python_auto_lock.py` | `lager python` auto-lock wrapper idempotency, atexit, and heartbeat thread |
 | `test_python_breakpoint_session.py` | Breakpoint client request shapes for continue_python/breakpoint_status endpoints |
 | `test_python_stop_signals.py` | `lager python` stop handlers cover SIGINT, SIGTERM and SIGHUP on both registration paths, and restore every one; asserts real signal dispositions rather than recorded calls |
+| `test_python_exit_codes.py` | `normalize_exit_code` maps a signal death (`-9`) onto the 128+N convention `SIGKILL_EXIT_CODE` is written in, so a timeout kill reports 137 rather than 247, and never returns a negative code to `sys.exit` |
 | `test_resolve_box_locked.py` | `resolve_box_locked`: acquires an ephemeral lock on resolution, stashes the release on the context, passes through under `LAGER_AUTO_LOCK_DISABLE`, and reports `already_ours` for a lock we already hold. Pins the holder via `get_lock_holder` and forbids real HTTP, so the result cannot depend on whether it runs on a laptop or a CI runner |
 | `test_ssh.py` | SSH ensure_lager_box_keypair and key_auth_works helpers |
 | `test_supply_tui.py` | SupplyTUI render output, command parsing, worker threads, connection failure |
